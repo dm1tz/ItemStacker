@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<CoreCompileDependsOn>PrepareResources;$(CompileDependsOn)</CoreCompileDependsOn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.ResxSourceGenerator" PrivateAssets="all" />
+		<PackageReference Include="SteamKit2" IncludeAssets="compile" />
+		<PackageReference Include="System.Composition.AttributedModel" IncludeAssets="compile" />
+		<PackageReference Include="System.Linq.Async" IncludeAssets="compile" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\ArchiSteamFarm\ArchiSteamFarm\ArchiSteamFarm.csproj" ExcludeAssets="all" Private="false" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Update="Localization\Strings.resx" EmitFormatMethods="true" />
+	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="..\ArchiSteamFarm\ArchiSteamFarm\bin\$(Configuration)\$(TargetFramework)\plugins\" SkipUnchangedFiles="true" />
+	</Target>
+</Project>
