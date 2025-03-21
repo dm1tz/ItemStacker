@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/dm1tz/ItemStacker/compare/v0.1.0...v0.2.0) (2025-03-21)
+
+
+### Features
+
+* add `splititems` command ([2ffa78f](https://github.com/dm1tz/ItemStacker/commit/2ffa78f582b05ff0b1ffdd30fc5cee57467e479c))
+
 ## [0.1.0](https://github.com/dm1tz/ItemStacker/compare/v0.0.1...v0.1.0) (2025-03-18)
 
 
