@@ -17,7 +17,7 @@ internal static class StackHandler {
 
 	private static readonly SemaphoreSlim StackSemaphore = new(1, 1);
 
-	internal static async Task<string> StackInventoryItems(Bot bot, uint appID, ulong contextID) {
+	internal static async Task<string> StackItems(Bot bot, uint appID, ulong contextID) {
 		ArgumentNullException.ThrowIfNull(bot);
 
 		InventoryHandler? inventoryHandler = bot.GetHandler<InventoryHandler>();
@@ -52,10 +52,10 @@ internal static class StackHandler {
 			uint itemsCount = 0;
 
 			foreach (var assetGroup in filteredInventory) {
-				ulong destItemID = assetGroup.First().AssetID;
+				ulong destAssetID = assetGroup.First().AssetID;
 
 				foreach (var asset in assetGroup.Skip(1)) {
-					var response = await inventoryHandler.CombineItemStacks(appID, asset, destItemID, bot.SteamID).ConfigureAwait(false);
+					var response = await inventoryHandler.CombineItemStacks(appID, asset, destAssetID, bot.SteamID).ConfigureAwait(false);
 
 					if (response == null) {
 						return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
@@ -75,5 +75,57 @@ internal static class StackHandler {
 		} finally {
 			StackSemaphore.Release();
 		}
+	}
+
+	internal static async Task<string> SplitItems(Bot bot, HashSet<ulong> itemIDs, uint quantity, uint appID, ulong contextID) {
+		ArgumentNullException.ThrowIfNull(bot);
+
+		InventoryHandler? inventoryHandler = bot.GetHandler<InventoryHandler>();
+
+		if (inventoryHandler == null) {
+			throw new InvalidOperationException(nameof(inventoryHandler));
+		}
+
+		await StackSemaphore.WaitAsync().ConfigureAwait(false);
+
+		try {
+			HashSet<Asset> inventory = [];
+
+			try {
+				inventory = await bot.ArchiHandler.GetMyInventoryAsync(appID, contextID).Where(asset => itemIDs.Contains(asset.AssetID) && asset.Amount > 1).ToHashSetAsync().ConfigureAwait(false);
+			} catch (TimeoutException e) {
+				bot.ArchiLogger.LogGenericWarningException(e);
+			} catch (Exception e) {
+				bot.ArchiLogger.LogGenericException(e);
+			}
+
+			if (inventory.Count == 0) {
+				return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
+			}
+
+			uint unstackCount = 0;
+
+			foreach (var asset in inventory) {
+				if (quantity > asset.AssetID) {
+					return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, $"{nameof(quantity)} > {nameof(asset.AssetID)}");
+				}
+
+				var response = await inventoryHandler.SplitItemStack(appID, asset.AssetID, quantity, bot.SteamID).ConfigureAwait(false);
+
+				if (response == null) {
+					return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
+				}
+
+				if (response.Result != EResult.OK) {
+					return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, response.Result);
+				}
+				unstackCount++;
+
+				await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
+			}
+			return PluginLocale.Strings.FormatBotDoneUnStacking(unstackCount);
+		} finally {
+		StackSemaphore.Release();
+	}
 	}
 }

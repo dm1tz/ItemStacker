@@ -51,4 +51,33 @@ internal sealed class InventoryHandler : ClientMsgHandler {
 
 		return response;
 	}
+
+	internal async Task<SteamUnifiedMessages.ServiceMethodResponse<CInventory_Response>?> SplitItemStack(uint appID, ulong itemID, uint quantity, ulong steamID) {
+		if (Client == null) {
+			throw new InvalidOperationException(nameof(Client));
+		}
+
+		if (!Client.IsConnected) {
+			return null;
+		}
+
+		CInventory_SplitItemStack_Request request = new() {
+			appid = appID,
+			itemid = itemID,
+			quantity = quantity,
+			steamid = steamID
+		};
+
+		SteamUnifiedMessages.ServiceMethodResponse<CInventory_Response> response;
+
+		try {
+			response = await UnifiedInventoryService.SplitItemStack(request).ToLongRunningTask().ConfigureAwait(false);
+		} catch (Exception e) {
+			ArchiLogger.LogGenericWarningException(e);
+
+			return null;
+		}
+
+		return response;
+	}
 }
