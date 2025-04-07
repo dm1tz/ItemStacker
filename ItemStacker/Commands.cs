@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
+using ArchiSteamFarm.Steam.Data;
 
 namespace ItemStacker;
 
@@ -29,14 +30,36 @@ internal static class Commands {
 						return await ResponseStackItems(access, args[1], args[2], Utilities.GetArgsAsText(message, 3), steamID).ConfigureAwait(false);
 					case "STACKITEMS" or "STI" when args.Length > 2:
 						return await ResponseStackItems(access, bot, args[1], args[2]).ConfigureAwait(false);
+					case "STACKITEMS&" or "STI&" when args.Length > 3:
+						return await ResponseStackItemsByAssetRarity(access, bot, args[1], args[2], Utilities.GetArgsAsText(args, 3, ",")).ConfigureAwait(false);
+					case "STACKITEMS&" or "STI&" when args.Length > 3:
+						return await ResponseStackItemsByAssetRarity(access, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, ",")).ConfigureAwait(false);
 					case "SPLITITEMS" or "SPI" when args.Length > 5:
-							return await ResponseSplitItems(access, args[1], args[2], args[3], args[4], Utilities.GetArgsAsText(message, 5), steamID).ConfigureAwait(false);
+							return await ResponseSplitItems(access, args[1], args[2], args[3], args[4], args[5]).ConfigureAwait(false);
 					case "SPLITITEMS" or "SPI" when args.Length > 4:
 								return await ResponseSplitItems(access, bot, args[1], args[2], args[3], args[4]).ConfigureAwait(false);
 					default:
 						return null;
 				}
 		}
+	}
+
+	private static HashSet<EAssetRarity>? ParseAssetRarities(string assetRaritiesText) {
+		ArgumentException.ThrowIfNullOrEmpty(assetRaritiesText);
+
+		string[] assetRaritiesArgs = assetRaritiesText.Split(SharedInfo.ListElementSeparators, StringSplitOptions.RemoveEmptyEntries);
+
+		HashSet<EAssetRarity> assetRarities = [];
+
+		foreach (string assetRarityArg in assetRaritiesArgs) {
+			if (!Enum.TryParse(assetRarityArg, true, out EAssetRarity assetRarity) || !Enum.IsDefined(assetRarity)) {
+				return null;
+			}
+
+			assetRarities.Add(assetRarity);
+		}
+
+		return assetRarities;
 	}
 
 	private async static Task<string?> ResponseStackItems(EAccess access, Bot bot, string targetAppID, string targetContextID) {
@@ -76,6 +99,56 @@ internal static class Commands {
 		}
 
 		IList<string?> results = await Utilities.InParallel(bots.Select(bot => Task.Run(() => ResponseStackItems(Interaction.Commands.GetProxyAccess(bot, access, steamID), bot, appID, contextID)))).ConfigureAwait(false);
+
+		List<string> responses = [..results.Where(static result => !string.IsNullOrEmpty(result))!];
+
+		return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
+	}
+
+	private async static Task<string?> ResponseStackItemsByAssetRarity(EAccess access, Bot bot, string targetAppID, string targetContextID, string assetRaritiesText) {
+		ArgumentException.ThrowIfNullOrEmpty(targetAppID);
+		ArgumentException.ThrowIfNullOrEmpty(targetContextID);
+
+		if (access < EAccess.Master) {
+			return null;
+		}
+
+		if (!uint.TryParse(targetAppID, out uint appID) || (appID == 0)) {
+			return bot.Commands.FormatBotResponse(string.Format(CultureInfo.CurrentCulture, Strings.ErrorParsingObject, (nameof(appID))));
+		}
+
+		if (!ulong.TryParse(targetContextID, out ulong contextID) || (contextID == 0)) {
+			return bot.Commands.FormatBotResponse(string.Format(CultureInfo.CurrentCulture, Strings.ErrorParsingObject, nameof(contextID)));
+		}
+
+		HashSet<EAssetRarity>? assetRarities = ParseAssetRarities(assetRaritiesText);
+
+		if ((assetRarities == null) || (assetRarities.Count == 0)) {
+			return bot.Commands.FormatBotResponse(string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsInvalid, nameof(assetRarities)));
+		}
+
+		string result = await StackHandler.StackItems(bot, appID, contextID, item => assetRarities.Contains(item.Rarity)).ConfigureAwait(false);
+
+		return bot.Commands.FormatBotResponse(result);
+	}
+
+	private static async Task<string?> ResponseStackItemsByAssetRarity(EAccess access, string botNames, string appID, string contextID, string assetRaritiesText, ulong steamID = 0) {
+		ArgumentException.ThrowIfNullOrEmpty(botNames);
+		ArgumentException.ThrowIfNullOrEmpty(appID);
+		ArgumentException.ThrowIfNullOrEmpty(contextID);
+		ArgumentException.ThrowIfNullOrEmpty(assetRaritiesText);
+
+		if ((steamID != 0) && !new SteamID(steamID).IsIndividualAccount) {
+			throw new ArgumentOutOfRangeException(nameof(steamID));
+		}
+
+		HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+		if ((bots == null) || (bots.Count == 0)) {
+			return access >= EAccess.Master ? Interaction.Commands.FormatStaticResponse(string.Format(CultureInfo.CurrentCulture, Strings.BotNotFound, botNames)) : null;
+		}
+
+		IList<string?> results = await Utilities.InParallel(bots.Select(bot => Task.Run(() => ResponseStackItemsByAssetRarity(Interaction.Commands.GetProxyAccess(bot, access, steamID), bot, appID, contextID, assetRaritiesText)))).ConfigureAwait(false);
 
 		List<string> responses = [..results.Where(static result => !string.IsNullOrEmpty(result))!];
 
