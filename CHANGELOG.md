@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/dm1tz/ItemStacker/compare/v0.3.0...v0.3.1) (2025-04-07)
+
+
+### Bug Fixes
+
+* typo ([#5](https://github.com/dm1tz/ItemStacker/issues/5)) ([36706b7](https://github.com/dm1tz/ItemStacker/commit/36706b7073aad8aaa3e5a62ff8f4582dda8f5019))
+
 ## [0.3.0](https://github.com/dm1tz/ItemStacker/compare/v0.2.0...v0.3.0) (2025-04-07)
 
 
