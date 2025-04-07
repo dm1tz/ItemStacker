@@ -17,7 +17,7 @@ internal static class StackHandler {
 
 	private static readonly SemaphoreSlim StackSemaphore = new(1, 1);
 
-	internal static async Task<string> StackItems(Bot bot, uint appID, ulong contextID) {
+	internal static async Task<string> StackItems(Bot bot, uint appID, ulong contextID, Func<Asset, bool>? filterFunction = null) {
 		ArgumentNullException.ThrowIfNull(bot);
 
 		InventoryHandler? inventoryHandler = bot.GetHandler<InventoryHandler>();
@@ -29,10 +29,13 @@ internal static class StackHandler {
 		await StackSemaphore.WaitAsync().ConfigureAwait(false);
 
 		try {
+
+			filterFunction ??= static _ => true;
+
 			HashSet<Asset> inventory = [];
 
 			try {
-				inventory = await bot.ArchiHandler.GetMyInventoryAsync(appID, contextID).ToHashSetAsync().ConfigureAwait(false);
+				inventory = await bot.ArchiHandler.GetMyInventoryAsync(appID, contextID).Where(item => filterFunction(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (TimeoutException e) {
 				bot.ArchiLogger.LogGenericWarningException(e);
 			} catch (Exception e) {
@@ -43,19 +46,19 @@ internal static class StackHandler {
 				return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
 			}
 
-			var filteredInventory = inventory.GroupBy(asset => asset.ClassID).Where(assetGroup => assetGroup.Count() > 1).ToHashSet();
+			var assetGroups = inventory.GroupBy(asset => asset.ClassID).Where(assetGroup => assetGroup.Count() > 1).ToHashSet();
 
-			if (filteredInventory == null) {
-				return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(filteredInventory));
+			if (assetGroups == null) {
+				return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(assetGroups));
 			}
 
 			uint itemsCount = 0;
 
-			foreach (var assetGroup in filteredInventory) {
-				ulong destAssetID = assetGroup.First().AssetID;
+			foreach (var assetGroup in assetGroups) {
+				ulong mainAssetID = assetGroup.First().AssetID;
 
 				foreach (var asset in assetGroup.Skip(1)) {
-					var response = await inventoryHandler.CombineItemStacks(appID, asset, destAssetID, bot.SteamID).ConfigureAwait(false);
+					var response = await inventoryHandler.CombineItemStacks(appID, asset, mainAssetID, bot.SteamID).ConfigureAwait(false);
 
 					if (response == null) {
 						return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
