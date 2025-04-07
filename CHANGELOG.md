@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/dm1tz/ItemStacker/compare/v0.2.0...v0.3.0) (2025-04-07)
+
+
+### Features
+
+* add `stackitems&` command ([#3](https://github.com/dm1tz/ItemStacker/issues/3)) ([64f270b](https://github.com/dm1tz/ItemStacker/commit/64f270b9306315d4d0ed8ccba36941102cad6850))
+
 ## [0.2.0](https://github.com/dm1tz/ItemStacker/compare/v0.1.0...v0.2.0) (2025-03-21)
 
 
