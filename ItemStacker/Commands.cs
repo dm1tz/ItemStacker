@@ -32,7 +32,7 @@ internal static class Commands {
 						return await ResponseStackItems(access, bot, args[1], args[2]).ConfigureAwait(false);
 					case "STACKITEMS&" or "STI&" when args.Length > 3:
 						return await ResponseStackItemsByAssetRarity(access, bot, args[1], args[2], Utilities.GetArgsAsText(args, 3, ",")).ConfigureAwait(false);
-					case "STACKITEMS&" or "STI&" when args.Length > 3:
+					case "STACKITEMS&" or "STI&" when args.Length > 4:
 						return await ResponseStackItemsByAssetRarity(access, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, ",")).ConfigureAwait(false);
 					case "SPLITITEMS" or "SPI" when args.Length > 5:
 							return await ResponseSplitItems(access, args[1], args[2], args[3], args[4], args[5]).ConfigureAwait(false);
