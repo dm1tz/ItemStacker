@@ -61,10 +61,10 @@
 		</value>
 	</resheader>
 	<data name="BotDoneStacking" xml:space="preserve">
-		<value>Successfully stacked {0} assets!</value>
+		<value>Successfully stacked {0} items!</value>
 		<comment>{0} will be replaced by items count</comment>
 	</data>
-	<data name="BotDoneUnStacking" xml:space="preserve">
+	<data name="BotDoneUnstacking" xml:space="preserve">
 		<value>Successfully processed {0} item stacks!</value>
 		<comment>{0} will be replaced by items count</comment>
 	</data>

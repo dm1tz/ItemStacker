@@ -17,7 +17,7 @@ internal static class StackHandler {
 
 	private static readonly SemaphoreSlim StackSemaphore = new(1, 1);
 
-	internal static async Task<string> StackItems(Bot bot, uint appID, ulong contextID, Func<Asset, bool>? filterFunction = null) {
+	internal static async Task<string> StackInventory(Bot bot, uint appID, ulong contextID, Func<Asset, bool>? filterFunction = null) {
 		ArgumentNullException.ThrowIfNull(bot);
 
 		InventoryHandler? inventoryHandler = bot.GetHandler<InventoryHandler>();
@@ -109,8 +109,8 @@ internal static class StackHandler {
 			uint unstackCount = 0;
 
 			foreach (var asset in inventory) {
-				if (quantity > asset.AssetID) {
-					return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, $"{nameof(quantity)} > {nameof(asset.AssetID)}");
+				if (quantity > asset.Amount) {
+					return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, $"{nameof(quantity)} > {nameof(asset.Amount)}");
 				}
 
 				var response = await inventoryHandler.SplitItemStack(appID, asset.AssetID, quantity, bot.SteamID).ConfigureAwait(false);
@@ -122,11 +122,12 @@ internal static class StackHandler {
 				if (response.Result != EResult.OK) {
 					return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, response.Result);
 				}
+
 				unstackCount++;
 
 				await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
 			}
-			return PluginLocale.Strings.FormatBotDoneUnStacking(unstackCount);
+			return PluginLocale.Strings.FormatBotDoneUnstacking(unstackCount);
 		} finally {
 		StackSemaphore.Release();
 	}

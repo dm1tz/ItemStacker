@@ -26,14 +26,14 @@ internal static class Commands {
 				}
 			default:
 				switch (args[0].ToUpperInvariant()) {
-					case "STACKITEMS" or "STI" when args.Length > 3:
-						return await ResponseStackItems(access, args[1], args[2], Utilities.GetArgsAsText(message, 3), steamID).ConfigureAwait(false);
-					case "STACKITEMS" or "STI" when args.Length > 2:
-						return await ResponseStackItems(access, bot, args[1], args[2]).ConfigureAwait(false);
-					case "STACKITEMS&" or "STI&" when args.Length > 3:
-						return await ResponseStackItemsByAssetRarity(access, bot, args[1], args[2], Utilities.GetArgsAsText(args, 3, ",")).ConfigureAwait(false);
-					case "STACKITEMS&" or "STI&" when args.Length > 4:
-						return await ResponseStackItemsByAssetRarity(access, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, ",")).ConfigureAwait(false);
+					case "STACKINVENTORY" or "STI" when args.Length > 3:
+						return await ResponseStackInventory(access, args[1], args[2], Utilities.GetArgsAsText(message, 3), steamID).ConfigureAwait(false);
+					case "STACKINVENTORY" or "STI" when args.Length > 2:
+						return await ResponseStackInventory(access, bot, args[1], args[2]).ConfigureAwait(false);
+					case "STACKINVENTORY&" or "STI&" when args.Length > 3:
+						return await ResponseStackInventoryByAssetRarity(access, bot, args[1], args[2], Utilities.GetArgsAsText(args, 3, ",")).ConfigureAwait(false);
+					case "STACKINVENTORY&" or "STI&" when args.Length > 4:
+						return await ResponseStackInventoryByAssetRarity(access, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, ",")).ConfigureAwait(false);
 					case "SPLITITEMS" or "SPI" when args.Length > 5:
 							return await ResponseSplitItems(access, args[1], args[2], args[3], args[4], args[5]).ConfigureAwait(false);
 					case "SPLITITEMS" or "SPI" when args.Length > 4:
@@ -62,7 +62,7 @@ internal static class Commands {
 		return assetRarities;
 	}
 
-	private async static Task<string?> ResponseStackItems(EAccess access, Bot bot, string targetAppID, string targetContextID) {
+	private async static Task<string?> ResponseStackInventory(EAccess access, Bot bot, string targetAppID, string targetContextID) {
 		ArgumentException.ThrowIfNullOrEmpty(targetAppID);
 		ArgumentException.ThrowIfNullOrEmpty(targetContextID);
 
@@ -78,12 +78,12 @@ internal static class Commands {
 			return bot.Commands.FormatBotResponse(string.Format(CultureInfo.CurrentCulture, Strings.ErrorParsingObject, nameof(contextID)));
 		}
 
-		string result = await StackHandler.StackItems(bot, appID, contextID).ConfigureAwait(false);
+		string result = await StackHandler.StackInventory(bot, appID, contextID).ConfigureAwait(false);
 
 		return bot.Commands.FormatBotResponse(result);
 	}
 
-	private static async Task<string?> ResponseStackItems(EAccess access, string botNames, string appID, string contextID, ulong steamID = 0) {
+	private static async Task<string?> ResponseStackInventory(EAccess access, string botNames, string appID, string contextID, ulong steamID = 0) {
 		ArgumentException.ThrowIfNullOrEmpty(botNames);
 		ArgumentException.ThrowIfNullOrEmpty(appID);
 		ArgumentException.ThrowIfNullOrEmpty(contextID);
@@ -98,14 +98,14 @@ internal static class Commands {
 			return access >= EAccess.Master ? Interaction.Commands.FormatStaticResponse(string.Format(CultureInfo.CurrentCulture, Strings.BotNotFound, botNames)) : null;
 		}
 
-		IList<string?> results = await Utilities.InParallel(bots.Select(bot => Task.Run(() => ResponseStackItems(Interaction.Commands.GetProxyAccess(bot, access, steamID), bot, appID, contextID)))).ConfigureAwait(false);
+		IList<string?> results = await Utilities.InParallel(bots.Select(bot => Task.Run(() => ResponseStackInventory(Interaction.Commands.GetProxyAccess(bot, access, steamID), bot, appID, contextID)))).ConfigureAwait(false);
 
 		List<string> responses = [..results.Where(static result => !string.IsNullOrEmpty(result))!];
 
 		return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 	}
 
-	private async static Task<string?> ResponseStackItemsByAssetRarity(EAccess access, Bot bot, string targetAppID, string targetContextID, string assetRaritiesText) {
+	private async static Task<string?> ResponseStackInventoryByAssetRarity(EAccess access, Bot bot, string targetAppID, string targetContextID, string assetRaritiesText) {
 		ArgumentException.ThrowIfNullOrEmpty(targetAppID);
 		ArgumentException.ThrowIfNullOrEmpty(targetContextID);
 
@@ -127,12 +127,12 @@ internal static class Commands {
 			return bot.Commands.FormatBotResponse(string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsInvalid, nameof(assetRarities)));
 		}
 
-		string result = await StackHandler.StackItems(bot, appID, contextID, item => assetRarities.Contains(item.Rarity)).ConfigureAwait(false);
+		string result = await StackHandler.StackInventory(bot, appID, contextID, item => assetRarities.Contains(item.Rarity)).ConfigureAwait(false);
 
 		return bot.Commands.FormatBotResponse(result);
 	}
 
-	private static async Task<string?> ResponseStackItemsByAssetRarity(EAccess access, string botNames, string appID, string contextID, string assetRaritiesText, ulong steamID = 0) {
+	private static async Task<string?> ResponseStackInventoryByAssetRarity(EAccess access, string botNames, string appID, string contextID, string assetRaritiesText, ulong steamID = 0) {
 		ArgumentException.ThrowIfNullOrEmpty(botNames);
 		ArgumentException.ThrowIfNullOrEmpty(appID);
 		ArgumentException.ThrowIfNullOrEmpty(contextID);
@@ -148,7 +148,7 @@ internal static class Commands {
 			return access >= EAccess.Master ? Interaction.Commands.FormatStaticResponse(string.Format(CultureInfo.CurrentCulture, Strings.BotNotFound, botNames)) : null;
 		}
 
-		IList<string?> results = await Utilities.InParallel(bots.Select(bot => Task.Run(() => ResponseStackItemsByAssetRarity(Interaction.Commands.GetProxyAccess(bot, access, steamID), bot, appID, contextID, assetRaritiesText)))).ConfigureAwait(false);
+		IList<string?> results = await Utilities.InParallel(bots.Select(bot => Task.Run(() => ResponseStackInventoryByAssetRarity(Interaction.Commands.GetProxyAccess(bot, access, steamID), bot, appID, contextID, assetRaritiesText)))).ConfigureAwait(false);
 
 		List<string> responses = [..results.Where(static result => !string.IsNullOrEmpty(result))!];
 
