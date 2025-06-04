@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/dm1tz/ItemStacker/compare/v0.3.2...v0.3.3) (2025-06-04)
+
+
+### Bug Fixes
+
+* recompile ([bca3941](https://github.com/dm1tz/ItemStacker/commit/bca3941d40812b6217df10f784006549748b2021))
+
 ## [0.3.2](https://github.com/dm1tz/ItemStacker/compare/v0.3.1...v0.3.2) (2025-04-12)
 
 
