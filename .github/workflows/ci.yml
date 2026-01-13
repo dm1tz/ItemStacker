@@ -15,16 +15,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: read
-    steps:
-      - name: Validate title
-        uses: amannn/action-semantic-pull-request@v6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -47,7 +37,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    if: "github.actor == 'release-please[bot]'"
+    if: startsWith(github.head_ref, 'release-please--')
     steps:
       - name: Checkout code
         uses: actions/checkout@v5.0.0
@@ -75,7 +65,7 @@ jobs:
           PLUGIN_NAME: ${{ steps.plugin-name.outputs.info }}
         run: dotnet publish "$PLUGIN_NAME" -o "out/${PLUGIN_NAME}" -c Release -p:ContinuousIntegrationBuild=true -p:TargetLatestRuntimePatch=false -p:UseAppHost=false --nologo
 
-      - name: Upload plugin artifact
+      - name: Upload release artifact
         uses: actions/upload-artifact@v4.6.2
         with:
           name: ${{ steps.plugin-name.outputs.info }}

@@ -100,7 +100,7 @@ internal static class Commands {
 
 		IList<string?> results = await Utilities.InParallel(bots.Select(bot => Task.Run(() => ResponseStackInventory(Interaction.Commands.GetProxyAccess(bot, access, steamID), bot, appID, contextID)))).ConfigureAwait(false);
 
-		List<string> responses = [..results.Where(static result => !string.IsNullOrEmpty(result))!];
+		List<string> responses = [..results.Where(static result => !string.IsNullOrEmpty(result)).Select(static result => result!)];
 
 		return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 	}
@@ -150,7 +150,7 @@ internal static class Commands {
 
 		IList<string?> results = await Utilities.InParallel(bots.Select(bot => Task.Run(() => ResponseStackInventoryByAssetRarity(Interaction.Commands.GetProxyAccess(bot, access, steamID), bot, appID, contextID, assetRaritiesText)))).ConfigureAwait(false);
 
-		List<string> responses = [..results.Where(static result => !string.IsNullOrEmpty(result))!];
+		List<string> responses = [..results.Where(static result => !string.IsNullOrEmpty(result)).Select(static result => result!)];
 
 		return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 	}
@@ -213,7 +213,7 @@ internal static class Commands {
 
 		IList<string?> results = await Utilities.InParallel(bots.Select(bot => Task.Run(() => ResponseSplitItems(Interaction.Commands.GetProxyAccess(bot, access, steamID), bot, itemIDs, quantity, appID, contextID)))).ConfigureAwait(false);
 
-		List<string> responses = [..results.Where(static result => !string.IsNullOrEmpty(result))!];
+		List<string> responses = [..results.Where(static result => !string.IsNullOrEmpty(result)).Select(static result => result!)];
 
 		return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 	}

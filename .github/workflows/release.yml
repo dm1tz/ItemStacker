@@ -1,31 +1,35 @@
-name: CD
+name: Release
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
 
 permissions:
-  actions: read
   contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
-  deploy:
+  release:
     runs-on: ubuntu-latest
-
     steps:
+      - name: Generate release
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: .github/release-please-config.json
+          manifest-file: .github/release-please-manifest.json
       - name: Checkout code
         uses: actions/checkout@v5.0.0
         with:
           show-progress: false
           submodules: recursive
-
       - name: Parse plugin name from Directory.Build.props
         id: plugin-name
         uses: mavrosxristoforos/get-xml-info@2.0
         with:
           xml-file: 'Directory.Build.props'
           xpath: '//PluginName'
-
       - name: Download latest artifact
         uses: dawidd6/action-download-artifact@v11
         with:
@@ -34,9 +38,8 @@ jobs:
           name: ${{ steps.plugin-name.outputs.info }}
           check_artifacts: true
           skip_unpack: true
-
-      - name: Attach artifact to release assets
-        uses: svenstaro/upload-release-action@v2
-        with:
-          overwrite: true
-          file: ${{ steps.plugin-name.outputs.info }}.zip
+      - name: Upload release artifact
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ steps.release.outputs.tag_name }} ${{ steps.plugin-name.outputs.info }}.zip
