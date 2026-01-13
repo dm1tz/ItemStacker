@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.0](https://github.com/dm1tz/ItemStacker/compare/v0.3.3...v0.4.0) (2026-01-13)
+
+
+### Features
+
+* .NET 10 ([14617e3](https://github.com/dm1tz/ItemStacker/commit/14617e3829d8b19903232ca93967042149ddefe6))
+* add tokenf ([07bb32a](https://github.com/dm1tz/ItemStacker/commit/07bb32ac73df4a5be7ebd829d2827ee6e8d45f35))
+* push ([59a4dc1](https://github.com/dm1tz/ItemStacker/commit/59a4dc153b635a8eb0f9bf1d09a48a2002c50b7a))
+* test ([6497da0](https://github.com/dm1tz/ItemStacker/commit/6497da0b02b159221874cc90ab2e4f2f9b2345a5))
+
+
+### Bug Fixes
+
+* **ci:** bump ([0ff9409](https://github.com/dm1tz/ItemStacker/commit/0ff94094d64fd424e9f530170e1407cf2de00ba6))
+* **ci:** typo ([6b857d0](https://github.com/dm1tz/ItemStacker/commit/6b857d0078881bcfae224ca3c2e63ab8e4626729))
+* push ([98c8589](https://github.com/dm1tz/ItemStacker/commit/98c8589d353a775ea008c01d23b9d453e1059a1f))
+* test ([fdc7d95](https://github.com/dm1tz/ItemStacker/commit/fdc7d9543cda966317d9435bacb59da00e9910a3))
+
 ## [0.3.3](https://github.com/dm1tz/ItemStacker/compare/v0.3.2...v0.3.3) (2025-06-04)
 
 
