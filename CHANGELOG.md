@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/dm1tz/ItemStacker/compare/v0.4.0...v0.5.0) (2026-01-13)
+
+
+### Features
+
+* test ([422fa8e](https://github.com/dm1tz/ItemStacker/commit/422fa8ef987e7fb2eb59e7ee7d6415fda70ff7b6))
+
 ## [0.4.0](https://github.com/dm1tz/ItemStacker/compare/v0.3.3...v0.4.0) (2026-01-13)
 
 
