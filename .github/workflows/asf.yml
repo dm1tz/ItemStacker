@@ -1,3 +1,4 @@
+name: Bump ASF reference
 on:
   schedule:
   - cron: '17 1 * * *'
@@ -13,14 +14,14 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6.0.2
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         show-progress: false
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Fetch latest ArchiSteamFarm release
       id: asf-release
-      uses: rez0n/actions-github-release@v2.1
+      uses: rez0n/actions-github-release@05fabbd6b2b3ce3383299555ea518faea69b736d # v2.1
       env:
         repository: JustArchiNET/ArchiSteamFarm
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -43,7 +44,7 @@ jobs:
         git commit -m "chore(deps): update ASF reference to ${LATEST_ASF_RELEASE}"
 
     - name: Push changes to the repo
-      uses: ad-m/github-push-action@v1.1.0
+      uses: ad-m/github-push-action@fdfe7e83ff42edf5d49846b69f3c78d806169d51 # v1.2.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: ${{ github.ref }}
