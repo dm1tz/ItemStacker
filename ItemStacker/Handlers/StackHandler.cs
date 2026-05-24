@@ -1,7 +1,9 @@
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam.Data;
 using ArchiSteamFarm.Steam;
+using ConsoleTables;
 using PluginLocale = ItemStacker.Localization;
+using SteamKit2.Internal;
 using SteamKit2;
 using System.Collections.Generic;
 using System.Globalization;
@@ -17,6 +19,25 @@ internal static class StackHandler {
 
 	private static readonly SemaphoreSlim StackSemaphore = new(1, 1);
 
+	internal static StackStatus? CurrentStack { get; private set; }
+
+	internal sealed record StackStatus(string BotName, uint AppID, uint Progress, uint Total, bool IsRunning, bool IsUnstack) {
+		internal string ToTable() {
+			ConsoleTable statusTable = new ConsoleTable("Bot", "Type", "Status", "AppID", "Progress")
+				.Configure(o => o.EnableCount = false);
+
+			_ = statusTable.AddRow(
+					BotName,
+					IsUnstack ? "Unstack" : "Stack",
+					IsRunning ? "Running" : "Completed",
+					AppID,
+					$"{Progress}/{Total}"
+					);
+
+			return statusTable.ToString();
+		}
+	}
+
 	internal static async Task<string> StackInventory(Bot bot, uint appID, ulong contextID, Func<Asset, bool>? filterFunction = null) {
 		ArgumentNullException.ThrowIfNull(bot);
 
@@ -25,6 +46,8 @@ internal static class StackHandler {
 		if (inventoryHandler == null) {
 			throw new InvalidOperationException(nameof(inventoryHandler));
 		}
+
+		CurrentStack = new StackStatus(bot.BotName, appID, 0, 0, true, false);
 
 		await StackSemaphore.WaitAsync().ConfigureAwait(false);
 
@@ -46,19 +69,21 @@ internal static class StackHandler {
 				return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
 			}
 
-			var assetGroups = inventory.GroupBy(asset => asset.ClassID).Where(assetGroup => assetGroup.Count() > 1).ToHashSet();
+			HashSet<IGrouping<ulong, Asset>> assetGroups = [.. inventory.GroupBy(asset => asset.ClassID).Where(assetGroup => assetGroup.Count() > 1)];
 
 			if (assetGroups == null) {
 				return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(assetGroups));
 			}
 
-			uint itemsCount = 0;
+			uint total = (uint) assetGroups.Sum(g => g.Count() - 1);
+			uint stackCount = 0;
+			uint progress = 0;
 
-			foreach (var assetGroup in assetGroups) {
+			foreach (IGrouping<ulong, Asset> assetGroup in assetGroups) {
 				ulong mainAssetID = assetGroup.First().AssetID;
 
-				foreach (var asset in assetGroup.Skip(1)) {
-					var response = await inventoryHandler.CombineItemStacks(appID, asset, mainAssetID, bot.SteamID).ConfigureAwait(false);
+				foreach (Asset asset in assetGroup.Skip(1)) {
+					SteamUnifiedMessages.ServiceMethodResponse<CInventory_Response>? response = await inventoryHandler.CombineItemStacks(appID, asset, mainAssetID, bot.SteamID).ConfigureAwait(false);
 
 					if (response == null) {
 						return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
@@ -68,15 +93,87 @@ internal static class StackHandler {
 						return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, response.Result);
 					}
 
-					itemsCount++;
+					stackCount++;
+					progress++;
+
+					CurrentStack = CurrentStack with {
+						Progress = progress,
+						Total = total
+					};
 
 					await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
 				}
 			}
 
-			return PluginLocale.Strings.FormatBotDoneStacking(itemsCount);
+			return PluginLocale.Strings.FormatBotDoneStacking(stackCount);
 		} finally {
-			StackSemaphore.Release();
+			CurrentStack = CurrentStack with { IsRunning = false };
+
+			_ = StackSemaphore.Release();
+		}
+	}
+
+	internal static async Task<string> UnstackInventory(Bot bot, uint appID, ulong contextID, Func<Asset, bool>? filterFunction = null) {
+		ArgumentNullException.ThrowIfNull(bot);
+
+		InventoryHandler? inventoryHandler = bot.GetHandler<InventoryHandler>();
+
+		if (inventoryHandler == null) {
+			throw new InvalidOperationException(nameof(inventoryHandler));
+		}
+
+		CurrentStack = new StackStatus(bot.BotName, appID, 0, 0, true, true);
+
+		await StackSemaphore.WaitAsync().ConfigureAwait(false);
+
+		try {
+			HashSet<Asset> inventory = [];
+
+			try {
+				inventory = await bot.ArchiHandler.GetMyInventoryAsync(appID, contextID)
+					.Where(item => (filterFunction == null || filterFunction(item)) && item.Amount > 1)
+					.ToHashSetAsync().ConfigureAwait(false);
+			} catch (TimeoutException e) {
+				bot.ArchiLogger.LogGenericWarningException(e);
+			} catch (Exception e) {
+				bot.ArchiLogger.LogGenericException(e);
+			}
+
+			if (inventory.Count == 0) {
+				return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
+			}
+
+			uint total = (uint) inventory.Count;
+			uint unstackCount = 0;
+			uint progress = 0;
+
+			foreach (Asset asset in inventory) {
+				SteamUnifiedMessages.ServiceMethodResponse<CInventory_Response>? response = await inventoryHandler.SplitItemStack(appID, asset.AssetID, 1, bot.SteamID).ConfigureAwait(false);
+
+				if (response == null) {
+					return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
+				}
+
+				if (response.Result != EResult.OK) {
+					return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, response.Result);
+				}
+
+				unstackCount++;
+				progress++;
+
+				CurrentStack = CurrentStack with {
+					Progress = progress,
+					Total = total
+				};
+
+				await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
+			}
+
+			return PluginLocale.Strings.FormatBotDoneUnstacking(unstackCount);
+		} finally {
+			CurrentStack = CurrentStack with { IsRunning = false };
+
+			_ = StackSemaphore.Release();
 		}
 	}
 
@@ -108,12 +205,12 @@ internal static class StackHandler {
 
 			uint unstackCount = 0;
 
-			foreach (var asset in inventory) {
+			foreach (Asset asset in inventory) {
 				if (quantity > asset.Amount) {
 					return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, $"{nameof(quantity)} > {nameof(asset.Amount)}");
 				}
 
-				var response = await inventoryHandler.SplitItemStack(appID, asset.AssetID, quantity, bot.SteamID).ConfigureAwait(false);
+				SteamUnifiedMessages.ServiceMethodResponse<CInventory_Response>? response = await inventoryHandler.SplitItemStack(appID, asset.AssetID, quantity, bot.SteamID).ConfigureAwait(false);
 
 				if (response == null) {
 					return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
@@ -127,9 +224,10 @@ internal static class StackHandler {
 
 				await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
 			}
+
 			return PluginLocale.Strings.FormatBotDoneUnstacking(unstackCount);
 		} finally {
-		StackSemaphore.Release();
-	}
+			_ = StackSemaphore.Release();
+		}
 	}
 }

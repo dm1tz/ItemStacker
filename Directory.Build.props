@@ -11,7 +11,7 @@
 		<Authors>dm1tz</Authors>
 		<Company>$(Authors)</Company>
 		<Copyright>Copyright © $([System.DateTime]::UtcNow.Year) $(Company)</Copyright>
-		<Description>ASF plugin to create and split Steam inventory items.</Description>
+		<Description>ASF plugin to stack and unstack Steam inventory items.</Description>
 		<PackageIcon />
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/$(Company)/$(PluginName)</PackageProjectUrl>
