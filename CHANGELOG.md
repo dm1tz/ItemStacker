@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/dm1tz/ItemStacker/compare/v0.6.0...0.6.1) (2026-05-24)
+
+
+### Bug Fixes
+
+* **ci:** drop v in tags ([0d102aa](https://github.com/dm1tz/ItemStacker/commit/0d102aa55462155cdb3b1410c56914a33db5b4ab))
+
 ## [0.6.0](https://github.com/dm1tz/ItemStacker/compare/v0.5.0...v0.6.0) (2026-05-24)
 
 
