@@ -3,7 +3,7 @@
 
 	<PropertyGroup>
 		<PluginName>ItemStacker</PluginName>
-		<Version>0.5.0</Version> <!-- x-release-please-version -->
+		<Version>0.6.0</Version> <!-- x-release-please-version -->
 	</PropertyGroup>
 
 	<PropertyGroup>
