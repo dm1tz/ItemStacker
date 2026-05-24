@@ -16,13 +16,9 @@ using System;
 namespace ItemStacker;
 
 [Export(typeof(IPlugin))]
-internal sealed class ItemStackerPlugin : IBotCommand2, IBotSteamClient {
-	[JsonInclude]
-	[Required]
+internal sealed class ItemStackerPlugin : IBotCommand2, IBotSteamClient, IGitHubPluginUpdates {
 	public string Name => nameof(ItemStackerPlugin);
-
-	[JsonInclude]
-	[Required]
+	public string RepositoryName => "dm1tz/ItemStacker";
 	public Version Version => typeof(ItemStackerPlugin).Assembly.GetName().Version ?? throw new InvalidOperationException(nameof(Version));
 
 	internal static ItemStackerConfig? Config { get; private set; }

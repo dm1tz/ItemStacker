@@ -65,7 +65,10 @@
 		<comment>{0} will be replaced by items count</comment>
 	</data>
 	<data name="BotDoneUnstacking" xml:space="preserve">
-		<value>Successfully processed {0} item stacks!</value>
+		<value>Successfully unstacked {0} items!</value>
 		<comment>{0} will be replaced by items count</comment>
+	</data>
+	<data name="BotNoStackRun" xml:space="preserve">
+		<value>No stack or unstack operation has been run yet.</value>
 	</data>
 </root>
