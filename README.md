@@ -29,3 +29,4 @@ Command | Alias | Access | Description
 `unstackinventory& [Bots] <AppID> <ContextID> <Rarities>` | `usti&` | `Master` | Unstacks stacked items of the specified rarities in the inventory of the given bot instances.
 `splititems [Bots] <ItemIDs> <Quantity> <AppID> <ContextID>` | `spi` | `Master` | Splits the given item stacks by the specified quantity on the given bot instances.
 `stackstatus` | `stst` | `FamilySharing` | Prints the current stack or unstack operation status, including type, progress, and items processed.
+`isversion` | `isv` | `FamilySharing` | Prints the actual version of plugin.
