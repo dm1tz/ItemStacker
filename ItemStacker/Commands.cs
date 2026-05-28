@@ -46,10 +46,10 @@ internal static class Commands {
 						return await ResponseUnstackInventoryByAssetRarity(access, bot, args[1], args[2], Utilities.GetArgsAsText(args, 3, ",")).ConfigureAwait(false);
 					case "UNSTACKINVENTORY&" or "USTI&" when args.Length > 4:
 						return await ResponseUnstackInventoryByAssetRarity(access, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, ",")).ConfigureAwait(false);
-					case "SPLITITEMS" or "SPI" when args.Length > 5:
-						return await ResponseSplitItems(access, args[1], args[2], args[3], args[4], args[5]).ConfigureAwait(false);
-					case "SPLITITEMS" or "SPI" when args.Length > 4:
-						return await ResponseSplitItems(access, bot, args[1], args[2], args[3], args[4]).ConfigureAwait(false);
+					case "UNSTACKITEM" or "USTT" when args.Length > 5:
+						return await ResponseUnstackItem(access, args[1], args[2], args[3], args[4], args[5]).ConfigureAwait(false);
+					case "UNSTACKITEM" or "USTT" when args.Length > 4:
+						return await ResponseUnstackItem(access, bot, args[1], args[2], args[3], args[4]).ConfigureAwait(false);
 					default:
 						return null;
 				}
@@ -83,7 +83,7 @@ internal static class Commands {
 			return access > EAccess.None ? bot.Commands.FormatBotResponse(Strings.ErrorAccessDenied) : null;
 		}
 
-		return bot.Commands.FormatBotResponse(StackHandler.CurrentStack is { } status
+		return bot.Commands.FormatBotResponse(StackHandler.BotStatuses.TryGetValue(bot.BotName, out StackHandler.StackStatus? status)
 			? string.Join(Environment.NewLine, Strings.Success, status.ToTable())
 			: Localization.Strings.BotNoStackRun);
 	}
@@ -274,7 +274,7 @@ internal static class Commands {
 		return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 	}
 
-	private static async Task<string?> ResponseSplitItems(EAccess access, Bot bot, string targetItemIDs, string targetQuantity, string targetAppID, string targetContextID) {
+	private static async Task<string?> ResponseUnstackItem(EAccess access, Bot bot, string targetItemIDs, string targetQuantity, string targetAppID, string targetContextID) {
 		ArgumentException.ThrowIfNullOrEmpty(targetAppID);
 		ArgumentException.ThrowIfNullOrEmpty(targetContextID);
 
@@ -315,7 +315,7 @@ internal static class Commands {
 		return bot.Commands.FormatBotResponse(result);
 	}
 
-	private static async Task<string?> ResponseSplitItems(EAccess access, string botNames, string itemIDs, string quantity, string appID, string contextID, ulong steamID = 0) {
+	private static async Task<string?> ResponseUnstackItem(EAccess access, string botNames, string itemIDs, string quantity, string appID, string contextID, ulong steamID = 0) {
 		ArgumentException.ThrowIfNullOrEmpty(botNames);
 		ArgumentException.ThrowIfNullOrEmpty(appID);
 		ArgumentException.ThrowIfNullOrEmpty(contextID);
@@ -330,7 +330,7 @@ internal static class Commands {
 			return access >= EAccess.Master ? Interaction.Commands.FormatStaticResponse(string.Format(CultureInfo.CurrentCulture, Strings.BotNotFound, botNames)) : null;
 		}
 
-		IList<string?> results = await Utilities.InParallel(bots.Select(bot => Task.Run(() => ResponseSplitItems(Interaction.Commands.GetProxyAccess(bot, access, steamID), bot, itemIDs, quantity, appID, contextID)))).ConfigureAwait(false);
+		IList<string?> results = await Utilities.InParallel(bots.Select(bot => Task.Run(() => ResponseUnstackItem(Interaction.Commands.GetProxyAccess(bot, access, steamID), bot, itemIDs, quantity, appID, contextID)))).ConfigureAwait(false);
 
 		List<string> responses = [.. results.Where(static result => !string.IsNullOrEmpty(result)).Select(static result => result!)];
 
