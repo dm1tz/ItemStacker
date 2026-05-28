@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/dm1tz/ItemStacker/compare/0.6.1...0.6.2) (2026-05-28)
+
+
+### Bug Fixes
+
+* `stackstatus` won't update bot names ([cc50e8d](https://github.com/dm1tz/ItemStacker/commit/cc50e8d5576660c91bd7425f9d023a9988f87c79))
+
 ## [0.6.1](https://github.com/dm1tz/ItemStacker/compare/v0.6.0...0.6.1) (2026-05-24)
 
 
