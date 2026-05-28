@@ -5,6 +5,7 @@ using ConsoleTables;
 using PluginLocale = ItemStacker.Localization;
 using SteamKit2.Internal;
 using SteamKit2;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -16,11 +17,8 @@ namespace ItemStacker.Handlers;
 
 internal static class StackHandler {
 	private static byte StackLimiterDelay => ItemStackerPlugin.Config?.StackLimiterDelay ?? ItemStackerConfig.DefaultStackLimiterDelay;
-
 	private static readonly SemaphoreSlim StackSemaphore = new(1, 1);
-
-	internal static StackStatus? CurrentStack { get; private set; }
-
+	internal static ConcurrentDictionary<string, StackStatus> BotStatuses { get; } = new();
 	internal sealed record StackStatus(string BotName, uint AppID, uint Progress, uint Total, bool IsRunning, bool IsUnstack) {
 		internal string ToTable() {
 			ConsoleTable statusTable = new ConsoleTable("Bot", "Type", "Status", "AppID", "Progress")
@@ -47,7 +45,7 @@ internal static class StackHandler {
 			throw new InvalidOperationException(nameof(inventoryHandler));
 		}
 
-		CurrentStack = new StackStatus(bot.BotName, appID, 0, 0, true, false);
+		BotStatuses[bot.BotName] = new StackStatus(bot.BotName, appID, 0, 0, true, false);
 
 		await StackSemaphore.WaitAsync().ConfigureAwait(false);
 
@@ -96,7 +94,7 @@ internal static class StackHandler {
 					stackCount++;
 					progress++;
 
-					CurrentStack = CurrentStack with {
+					BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with {
 						Progress = progress,
 						Total = total
 					};
@@ -107,7 +105,7 @@ internal static class StackHandler {
 
 			return PluginLocale.Strings.FormatBotDoneStacking(stackCount);
 		} finally {
-			CurrentStack = CurrentStack with { IsRunning = false };
+			BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with { IsRunning = false };
 
 			_ = StackSemaphore.Release();
 		}
@@ -122,7 +120,7 @@ internal static class StackHandler {
 			throw new InvalidOperationException(nameof(inventoryHandler));
 		}
 
-		CurrentStack = new StackStatus(bot.BotName, appID, 0, 0, true, true);
+		BotStatuses[bot.BotName] = new StackStatus(bot.BotName, appID, 0, 0, true, true);
 
 		await StackSemaphore.WaitAsync().ConfigureAwait(false);
 
@@ -161,7 +159,7 @@ internal static class StackHandler {
 				unstackCount++;
 				progress++;
 
-				CurrentStack = CurrentStack with {
+				BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with {
 					Progress = progress,
 					Total = total
 				};
@@ -171,7 +169,7 @@ internal static class StackHandler {
 
 			return PluginLocale.Strings.FormatBotDoneUnstacking(unstackCount);
 		} finally {
-			CurrentStack = CurrentStack with { IsRunning = false };
+			BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with { IsRunning = false };
 
 			_ = StackSemaphore.Release();
 		}

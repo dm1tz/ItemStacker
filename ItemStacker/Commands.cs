@@ -83,7 +83,7 @@ internal static class Commands {
 			return access > EAccess.None ? bot.Commands.FormatBotResponse(Strings.ErrorAccessDenied) : null;
 		}
 
-		return bot.Commands.FormatBotResponse(StackHandler.CurrentStack is { } status
+		return bot.Commands.FormatBotResponse(StackHandler.BotStatuses.TryGetValue(bot.BotName, out StackHandler.StackStatus? status)
 			? string.Join(Environment.NewLine, Strings.Success, status.ToTable())
 			: Localization.Strings.BotNoStackRun);
 	}
