@@ -19,21 +19,41 @@ internal static class StackHandler {
 	private static byte StackLimiterDelay => ItemStackerPlugin.Config?.StackLimiterDelay ?? ItemStackerConfig.DefaultStackLimiterDelay;
 	private static readonly SemaphoreSlim StackSemaphore = new(1, 1);
 	internal static ConcurrentDictionary<string, StackStatus> BotStatuses { get; } = new();
-	internal sealed record StackStatus(string BotName, uint AppID, uint Progress, uint Total, bool IsRunning, bool IsUnstack) {
+
+	internal sealed record StackStatus(string BotName, uint AppID, uint Progress, uint Total, bool IsUnstack, bool IsCompleted = false) {
 		internal string ToTable() {
-			ConsoleTable statusTable = new ConsoleTable("Bot", "Type", "Status", "AppID", "Progress")
+			ConsoleTable statusTable = new ConsoleTable("Bot", "Type", "AppID", "Progress")
 				.Configure(o => o.EnableCount = false);
 
 			_ = statusTable.AddRow(
 					BotName,
 					IsUnstack ? "Unstack" : "Stack",
-					IsRunning ? "Running" : "Completed",
 					AppID,
 					$"{Progress}/{Total}"
 					);
 
 			return statusTable.ToString();
 		}
+	}
+
+	internal static string GetStatusTable() {
+		if (BotStatuses.IsEmpty) {
+			return PluginLocale.Strings.BotNoStackRun;
+		}
+
+		ConsoleTable statusTable = new ConsoleTable("Bot", "Type", "AppID", "Progress")
+			.Configure(o => o.EnableCount = false);
+
+		foreach (StackStatus status in BotStatuses.Values) {
+			_ = statusTable.AddRow(
+				status.BotName,
+				status.IsUnstack ? "Unstack" : "Stack",
+				status.AppID,
+				$"{status.Progress}/{status.Total}"
+			);
+		}
+
+		return string.Join(Environment.NewLine, Strings.Success, statusTable.ToString());
 	}
 
 	internal static async Task<string> StackInventory(Bot bot, uint appID, ulong contextID, Func<Asset, bool>? filterFunction = null) {
@@ -45,7 +65,7 @@ internal static class StackHandler {
 			throw new InvalidOperationException(nameof(inventoryHandler));
 		}
 
-		BotStatuses[bot.BotName] = new StackStatus(bot.BotName, appID, 0, 0, true, false);
+		BotStatuses[bot.BotName] = new StackStatus(bot.BotName, appID, 0, 0, false);
 
 		await StackSemaphore.WaitAsync().ConfigureAwait(false);
 
@@ -103,10 +123,10 @@ internal static class StackHandler {
 				}
 			}
 
+			BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with { IsCompleted = true };
+
 			return PluginLocale.Strings.FormatBotDoneStacking(stackCount);
 		} finally {
-			BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with { IsRunning = false };
-
 			_ = StackSemaphore.Release();
 		}
 	}
@@ -120,7 +140,7 @@ internal static class StackHandler {
 			throw new InvalidOperationException(nameof(inventoryHandler));
 		}
 
-		BotStatuses[bot.BotName] = new StackStatus(bot.BotName, appID, 0, 0, true, true);
+		BotStatuses[bot.BotName] = new StackStatus(bot.BotName, appID, 0, 0, true);
 
 		await StackSemaphore.WaitAsync().ConfigureAwait(false);
 
@@ -128,9 +148,7 @@ internal static class StackHandler {
 			HashSet<Asset> inventory = [];
 
 			try {
-				inventory = await bot.ArchiHandler.GetMyInventoryAsync(appID, contextID)
-					.Where(item => (filterFunction == null || filterFunction(item)) && item.Amount > 1)
-					.ToHashSetAsync().ConfigureAwait(false);
+				inventory = await bot.ArchiHandler.GetMyInventoryAsync(appID, contextID).Where(item => (filterFunction == null || filterFunction(item)) && item.Amount > 1).ToHashSetAsync().ConfigureAwait(false);
 			} catch (TimeoutException e) {
 				bot.ArchiLogger.LogGenericWarningException(e);
 			} catch (Exception e) {
@@ -167,10 +185,10 @@ internal static class StackHandler {
 				await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
 			}
 
+			BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with { IsCompleted = true };
+
 			return PluginLocale.Strings.FormatBotDoneUnstacking(unstackCount);
 		} finally {
-			BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with { IsRunning = false };
-
 			_ = StackSemaphore.Release();
 		}
 	}
