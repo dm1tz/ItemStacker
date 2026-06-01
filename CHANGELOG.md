@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.3](https://github.com/dm1tz/ItemStacker/compare/0.6.2...0.6.3) (2026-06-01)
+
+
+### Bug Fixes
+
+* **commands:** `stackstatus` not updating ([#51](https://github.com/dm1tz/ItemStacker/issues/51)) ([8a7bc08](https://github.com/dm1tz/ItemStacker/commit/8a7bc08a48a2d44efbb5bdb15bd44befc736df5e))
+
 ## [0.6.2](https://github.com/dm1tz/ItemStacker/compare/0.6.1...0.6.2) (2026-05-28)
 
 
