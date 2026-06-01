@@ -83,9 +83,7 @@ internal static class Commands {
 			return access > EAccess.None ? bot.Commands.FormatBotResponse(Strings.ErrorAccessDenied) : null;
 		}
 
-		return bot.Commands.FormatBotResponse(StackHandler.BotStatuses.TryGetValue(bot.BotName, out StackHandler.StackStatus? status)
-			? string.Join(Environment.NewLine, Strings.Success, status.ToTable())
-			: Localization.Strings.BotNoStackRun);
+		return bot.Commands.FormatBotResponse(StackHandler.GetStatusTable());
 	}
 
 	private static async Task<string?> ResponseStackInventory(EAccess access, Bot bot, string targetAppID, string targetContextID) {
