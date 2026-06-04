@@ -29,7 +29,7 @@ internal static class StackHandler {
 					BotName,
 					IsUnstack ? "Unstack" : "Stack",
 					AppID,
-					$"{Progress}/{Total}"
+					Total == 0 ? "In Queue" : $"{Progress}/{Total}"
 					);
 
 			return statusTable.ToString();
@@ -49,7 +49,7 @@ internal static class StackHandler {
 				status.BotName,
 				status.IsUnstack ? "Unstack" : "Stack",
 				status.AppID,
-				$"{status.Progress}/{status.Total}"
+				status.Total == 0 ? "In Queue" : $"{status.Progress}/{status.Total}"
 			);
 		}
 
@@ -126,7 +126,8 @@ internal static class StackHandler {
 			return PluginLocale.Strings.FormatBotDoneStacking(stackCount);
 		} finally {
 			_ = StackSemaphore.Release();
-			BotStatuses.TryRemove(bot.BotName, out _);
+
+			_ = BotStatuses.TryRemove(bot.BotName, out _);
 		}
 	}
 
@@ -187,7 +188,8 @@ internal static class StackHandler {
 			return PluginLocale.Strings.FormatBotDoneUnstacking(unstackCount);
 		} finally {
 			_ = StackSemaphore.Release();
-			BotStatuses.TryRemove(bot.BotName, out _);
+
+			_ = BotStatuses.TryRemove(bot.BotName, out _);
 		}
 	}
 
