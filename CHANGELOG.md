@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/dm1tz/ItemStacker/compare/0.6.3...0.7.0) (2026-06-04)
+
+
+### Features
+
+* **commands:** amend table progress column ([#55](https://github.com/dm1tz/ItemStacker/issues/55)) ([e718997](https://github.com/dm1tz/ItemStacker/commit/e718997a9b80f0bf90fddf9065a87a59e60192ad))
+* **commands:** remove entry from `stackstatus` when complete ([#53](https://github.com/dm1tz/ItemStacker/issues/53)) ([90420d8](https://github.com/dm1tz/ItemStacker/commit/90420d8ef99ddb9c8a6c52d242cd0f5a499c3010))
+
 ## [0.6.3](https://github.com/dm1tz/ItemStacker/compare/0.6.2...0.6.3) (2026-06-01)
 
 
