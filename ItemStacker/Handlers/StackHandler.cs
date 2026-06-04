@@ -20,7 +20,7 @@ internal static class StackHandler {
 	private static readonly SemaphoreSlim StackSemaphore = new(1, 1);
 	internal static ConcurrentDictionary<string, StackStatus> BotStatuses { get; } = new();
 
-	internal sealed record StackStatus(string BotName, uint AppID, uint Progress, uint Total, bool IsUnstack, bool IsCompleted = false) {
+	internal sealed record StackStatus(string BotName, uint AppID, uint Progress, uint Total, bool IsUnstack) {
 		internal string ToTable() {
 			ConsoleTable statusTable = new ConsoleTable("Bot", "Type", "AppID", "Progress")
 				.Configure(o => o.EnableCount = false);
@@ -123,11 +123,10 @@ internal static class StackHandler {
 				}
 			}
 
-			BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with { IsCompleted = true };
-
 			return PluginLocale.Strings.FormatBotDoneStacking(stackCount);
 		} finally {
 			_ = StackSemaphore.Release();
+			BotStatuses.TryRemove(bot.BotName, out _);
 		}
 	}
 
@@ -185,11 +184,10 @@ internal static class StackHandler {
 				await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
 			}
 
-			BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with { IsCompleted = true };
-
 			return PluginLocale.Strings.FormatBotDoneUnstacking(unstackCount);
 		} finally {
 			_ = StackSemaphore.Release();
+			BotStatuses.TryRemove(bot.BotName, out _);
 		}
 	}
 
