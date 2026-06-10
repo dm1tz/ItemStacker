@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.0](https://github.com/dm1tz/ItemStacker/compare/0.7.0...0.8.0) (2026-06-10)
+
+
+### Features
+
+* **commands:** add `(un)stackitem` and `(un)stackitem*` ([424adae](https://github.com/dm1tz/ItemStacker/commit/424adae88cdb5424c6265781eb767c2e36dec161))
+* **commands:** add `unstackitem` and `unstackitem` ([#60](https://github.com/dm1tz/ItemStacker/issues/60)) ([424adae](https://github.com/dm1tz/ItemStacker/commit/424adae88cdb5424c6265781eb767c2e36dec161))
+
 ## [0.7.0](https://github.com/dm1tz/ItemStacker/compare/0.6.3...0.7.0) (2026-06-04)
 
 
