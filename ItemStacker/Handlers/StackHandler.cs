@@ -20,17 +20,11 @@ internal static class StackHandler {
 	private static readonly SemaphoreSlim StackSemaphore = new(1, 1);
 	internal static ConcurrentDictionary<string, StackStatus> BotStatuses { get; } = new();
 
-	internal sealed record StackStatus(string BotName, uint AppID, uint Progress, uint Total, bool IsUnstack) {
+	internal sealed record StackStatus(string BotName, uint AppID, uint Progress, int Total, bool IsUnstack) {
 		internal string ToTable() {
-			ConsoleTable statusTable = new ConsoleTable("Bot", "Type", "AppID", "Progress")
-				.Configure(o => o.EnableCount = false);
+			ConsoleTable statusTable = new ConsoleTable("Bot", "Type", "AppID", "Progress").Configure(o => o.EnableCount = false);
 
-			_ = statusTable.AddRow(
-					BotName,
-					IsUnstack ? "Unstack" : "Stack",
-					AppID,
-					Total == 0 ? "In Queue" : $"{Progress}/{Total}"
-					);
+			_ = statusTable.AddRow(BotName, IsUnstack ? "Unstack" : "Stack", AppID, Total == 0 ? "In Queue" : $"{Progress}/{Total}");
 
 			return statusTable.ToString();
 		}
@@ -41,16 +35,10 @@ internal static class StackHandler {
 			return PluginLocale.Strings.BotNoStackRun;
 		}
 
-		ConsoleTable statusTable = new ConsoleTable("Bot", "Type", "AppID", "Progress")
-			.Configure(o => o.EnableCount = false);
+		ConsoleTable statusTable = new ConsoleTable("Bot", "Type", "AppID", "Progress").Configure(o => o.EnableCount = false);
 
 		foreach (StackStatus status in BotStatuses.Values) {
-			_ = statusTable.AddRow(
-				status.BotName,
-				status.IsUnstack ? "Unstack" : "Stack",
-				status.AppID,
-				status.Total == 0 ? "In Queue" : $"{status.Progress}/{status.Total}"
-			);
+			_ = statusTable.AddRow(status.BotName, status.IsUnstack ? "Unstack" : "Stack", status.AppID, status.Total == 0 ? "In Queue" : $"{status.Progress}/{status.Total}");
 		}
 
 		return string.Join(Environment.NewLine, Strings.Success, statusTable.ToString());
@@ -93,9 +81,7 @@ internal static class StackHandler {
 				return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(assetGroups));
 			}
 
-			uint total = (uint) assetGroups.Sum(g => g.Count() - 1);
-			uint stackCount = 0;
-			uint progress = 0;
+			uint successCount = 0;
 
 			foreach (IGrouping<ulong, Asset> assetGroup in assetGroups) {
 				ulong mainAssetID = assetGroup.First().AssetID;
@@ -111,19 +97,18 @@ internal static class StackHandler {
 						return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, response.Result);
 					}
 
-					stackCount++;
-					progress++;
+					successCount++;
 
 					BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with {
-						Progress = progress,
-						Total = total
+						Progress = successCount,
+						Total = assetGroups.Sum(group => group.Count() - 1)
 					};
 
 					await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
 				}
 			}
 
-			return PluginLocale.Strings.FormatBotDoneStacking(stackCount);
+			return PluginLocale.Strings.FormatBotDoneStacking(successCount);
 		} finally {
 			_ = StackSemaphore.Release();
 
@@ -159,91 +144,37 @@ internal static class StackHandler {
 				return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
 			}
 
-			uint total = (uint) inventory.Count;
-			uint unstackCount = 0;
-			uint progress = 0;
+			uint successCount = 0;
 
 			foreach (Asset asset in inventory) {
-				SteamUnifiedMessages.ServiceMethodResponse<CInventory_Response>? response = await inventoryHandler.SplitItemStack(appID, asset.AssetID, 1, bot.SteamID).ConfigureAwait(false);
 
-				if (response == null) {
-					return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
+				for (uint i = 0; i < asset.Amount - 1; i++) {
+					SteamUnifiedMessages.ServiceMethodResponse<CInventory_Response>? response = await inventoryHandler.SplitItemStack(appID, asset.AssetID, 1, bot.SteamID).ConfigureAwait(false);
+
+					if (response == null) {
+						return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
+					}
+
+					if (response.Result != EResult.OK) {
+						return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, response.Result);
+					}
+
+					successCount++;
+
+					BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with {
+						Progress = successCount,
+						Total = inventory.Sum(asset => (int) asset.Amount - 1)
+					};
+
+					await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
 				}
-
-				if (response.Result != EResult.OK) {
-					return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, response.Result);
-				}
-
-				unstackCount++;
-				progress++;
-
-				BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with {
-					Progress = progress,
-					Total = total
-				};
-
-				await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
 			}
 
-			return PluginLocale.Strings.FormatBotDoneUnstacking(unstackCount);
+			return PluginLocale.Strings.FormatBotDoneUnstacking(successCount);
 		} finally {
 			_ = StackSemaphore.Release();
 
 			_ = BotStatuses.TryRemove(bot.BotName, out _);
-		}
-	}
-
-	internal static async Task<string> SplitItems(Bot bot, HashSet<ulong> itemIDs, uint quantity, uint appID, ulong contextID) {
-		ArgumentNullException.ThrowIfNull(bot);
-
-		InventoryHandler? inventoryHandler = bot.GetHandler<InventoryHandler>();
-
-		if (inventoryHandler == null) {
-			throw new InvalidOperationException(nameof(inventoryHandler));
-		}
-
-		await StackSemaphore.WaitAsync().ConfigureAwait(false);
-
-		try {
-			HashSet<Asset> inventory = [];
-
-			try {
-				inventory = await bot.ArchiHandler.GetMyInventoryAsync(appID, contextID).Where(asset => itemIDs.Contains(asset.AssetID) && asset.Amount > 1).ToHashSetAsync().ConfigureAwait(false);
-			} catch (TimeoutException e) {
-				bot.ArchiLogger.LogGenericWarningException(e);
-			} catch (Exception e) {
-				bot.ArchiLogger.LogGenericException(e);
-			}
-
-			if (inventory.Count == 0) {
-				return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
-			}
-
-			uint unstackCount = 0;
-
-			foreach (Asset asset in inventory) {
-				if (quantity > asset.Amount) {
-					return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, $"{nameof(quantity)} > {nameof(asset.Amount)}");
-				}
-
-				SteamUnifiedMessages.ServiceMethodResponse<CInventory_Response>? response = await inventoryHandler.SplitItemStack(appID, asset.AssetID, quantity, bot.SteamID).ConfigureAwait(false);
-
-				if (response == null) {
-					return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
-				}
-
-				if (response.Result != EResult.OK) {
-					return string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, response.Result);
-				}
-
-				unstackCount++;
-
-				await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
-			}
-
-			return PluginLocale.Strings.FormatBotDoneUnstacking(unstackCount);
-		} finally {
-			_ = StackSemaphore.Release();
 		}
 	}
 }
