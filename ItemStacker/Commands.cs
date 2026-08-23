@@ -22,10 +22,10 @@ internal static class Commands {
 				return await ResponseStackInventory(access, args[1], args[2], Utilities.GetArgsAsText(message, 3), steamID).ConfigureAwait(false);
 			case "STACKINVENTORY" or "STI" when args.Length > 2:
 				return await ResponseStackInventory(access, bot, args[1], args[2]).ConfigureAwait(false);
-			case "STACKINVENTORY&" or "STI&" when args.Length > 3:
-				return await ResponseStackInventoryByAssetRarity(access, bot, args[1], args[2], Utilities.GetArgsAsText(args, 3, ",")).ConfigureAwait(false);
 			case "STACKINVENTORY&" or "STI&" when args.Length > 4:
 				return await ResponseStackInventoryByAssetRarity(access, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, ",")).ConfigureAwait(false);
+			case "STACKINVENTORY&" or "STI&" when args.Length > 3:
+				return await ResponseStackInventoryByAssetRarity(access, bot, args[1], args[2], Utilities.GetArgsAsText(args, 3, ",")).ConfigureAwait(false);
 			case "STACKITEM" or "STIT" when args.Length > 4:
 				return await ResponseStackItem(access, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, ",")).ConfigureAwait(false);
 			case "STACKITEM" or "STIT" when args.Length > 3:
@@ -38,10 +38,10 @@ internal static class Commands {
 				return await ResponseUnstackInventory(access, args[1], args[2], Utilities.GetArgsAsText(message, 3), steamID).ConfigureAwait(false);
 			case "UNSTACKINVENTORY" or "USTI" when args.Length > 2:
 				return await ResponseUnstackInventory(access, bot, args[1], args[2]).ConfigureAwait(false);
-			case "UNSTACKINVENTORY&" or "USTI&" when args.Length > 3:
-				return await ResponseUnstackInventoryByAssetRarity(access, bot, args[1], args[2], Utilities.GetArgsAsText(args, 3, ",")).ConfigureAwait(false);
 			case "UNSTACKINVENTORY&" or "USTI&" when args.Length > 4:
 				return await ResponseUnstackInventoryByAssetRarity(access, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, ",")).ConfigureAwait(false);
+			case "UNSTACKINVENTORY&" or "USTI&" when args.Length > 3:
+				return await ResponseUnstackInventoryByAssetRarity(access, bot, args[1], args[2], Utilities.GetArgsAsText(args, 3, ",")).ConfigureAwait(false);
 			case "UNSTACKITEM" or "USTIT" when args.Length > 4:
 				return await ResponseUnstackItem(access, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, ",")).ConfigureAwait(false);
 			case "UNSTACKITEM" or "USTIT" when args.Length > 3:
