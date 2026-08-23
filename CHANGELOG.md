@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/dm1tz/ItemStacker/compare/0.8.0...0.8.1) (2026-08-23)
+
+
+### Bug Fixes
+
+* **commands:** fix `assetRarities` parsing for multi-bot argument ([4bc95cf](https://github.com/dm1tz/ItemStacker/commit/4bc95cfec1c4853cc82162259d81789f02eeb237))
+
 ## [0.8.0](https://github.com/dm1tz/ItemStacker/compare/0.7.0...0.8.0) (2026-06-10)
 
 
