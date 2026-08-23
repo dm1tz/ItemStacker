@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.2](https://github.com/dm1tz/ItemStacker/compare/0.8.1...0.8.2) (2026-08-23)
+
+
+### Bug Fixes
+
+* **commands:** bot connection check ([1e7ddc9](https://github.com/dm1tz/ItemStacker/commit/1e7ddc95217502e246fd13e2e207c0b4271bc219))
+
 ## [0.8.1](https://github.com/dm1tz/ItemStacker/compare/0.8.0...0.8.1) (2026-08-23)
 
 
