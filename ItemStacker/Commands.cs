@@ -84,6 +84,10 @@ internal static class Commands {
 			return null;
 		}
 
+		if (!bot.IsConnectedAndLoggedOn) {
+			return bot.Commands.FormatBotResponse(Strings.BotNotConnected);
+		}
+
 		if (!uint.TryParse(targetAppID, out uint appID) || (appID == 0)) {
 			return bot.Commands.FormatBotResponse(string.Format(CultureInfo.CurrentCulture, Strings.ErrorParsingObject, nameof(appID)));
 		}
@@ -125,6 +129,10 @@ internal static class Commands {
 
 		if (access < EAccess.Master) {
 			return null;
+		}
+
+		if (!bot.IsConnectedAndLoggedOn) {
+			return bot.Commands.FormatBotResponse(Strings.BotNotConnected);
 		}
 
 		if (!uint.TryParse(targetAppID, out uint appID) || (appID == 0)) {
@@ -176,6 +184,10 @@ internal static class Commands {
 
 		if (access < EAccess.Master) {
 			return null;
+		}
+
+		if (!bot.IsConnectedAndLoggedOn) {
+			return bot.Commands.FormatBotResponse(Strings.BotNotConnected);
 		}
 
 		string[] targets = targetClassIDs.Split(SharedInfo.ListElementSeparators, StringSplitOptions.RemoveEmptyEntries);
@@ -239,6 +251,10 @@ internal static class Commands {
 			return null;
 		}
 
+		if (!bot.IsConnectedAndLoggedOn) {
+			return bot.Commands.FormatBotResponse(Strings.BotNotConnected);
+		}
+
 		if (!uint.TryParse(targetAppID, out uint appID) || (appID == 0)) {
 			return bot.Commands.FormatBotResponse(string.Format(CultureInfo.CurrentCulture, Strings.ErrorParsingObject, nameof(appID)));
 		}
@@ -288,6 +304,10 @@ internal static class Commands {
 			return null;
 		}
 
+		if (!bot.IsConnectedAndLoggedOn) {
+			return bot.Commands.FormatBotResponse(Strings.BotNotConnected);
+		}
+
 		if (!uint.TryParse(targetAppID, out uint appID) || (appID == 0)) {
 			return bot.Commands.FormatBotResponse(string.Format(CultureInfo.CurrentCulture, Strings.ErrorParsingObject, nameof(appID)));
 		}
@@ -329,6 +349,10 @@ internal static class Commands {
 
 		if (access < EAccess.Master) {
 			return null;
+		}
+
+		if (!bot.IsConnectedAndLoggedOn) {
+			return bot.Commands.FormatBotResponse(Strings.BotNotConnected);
 		}
 
 		if (!uint.TryParse(targetAppID, out uint appID) || (appID == 0)) {
@@ -381,6 +405,10 @@ internal static class Commands {
 
 		if (access < EAccess.Master) {
 			return null;
+		}
+
+		if (!bot.IsConnectedAndLoggedOn) {
+			return bot.Commands.FormatBotResponse(Strings.BotNotConnected);
 		}
 
 		string[] targets = targetClassIDs.Split(SharedInfo.ListElementSeparators, StringSplitOptions.RemoveEmptyEntries);
@@ -444,6 +472,10 @@ internal static class Commands {
 			return null;
 		}
 
+		if (!bot.IsConnectedAndLoggedOn) {
+			return bot.Commands.FormatBotResponse(Strings.BotNotConnected);
+		}
+
 		if (!uint.TryParse(targetAppID, out uint appID) || (appID == 0)) {
 			return bot.Commands.FormatBotResponse(string.Format(CultureInfo.CurrentCulture, Strings.ErrorParsingObject, nameof(appID)));
 		}
@@ -493,6 +525,10 @@ internal static class Commands {
 
 		if (access < EAccess.FamilySharing) {
 			return access > EAccess.None ? bot.Commands.FormatBotResponse(Strings.ErrorAccessDenied) : null;
+		}
+
+		if (!bot.IsConnectedAndLoggedOn) {
+			return bot.Commands.FormatBotResponse(Strings.BotNotConnected);
 		}
 
 		return bot.Commands.FormatBotResponse(StackHandler.GetStatusTable());
