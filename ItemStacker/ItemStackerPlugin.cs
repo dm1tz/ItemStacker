@@ -16,7 +16,7 @@ using System;
 namespace ItemStacker;
 
 [Export(typeof(IPlugin))]
-internal sealed class ItemStackerPlugin : IBotCommand2, IBotSteamClient, IGitHubPluginUpdates {
+internal sealed class ItemStackerPlugin : IASF, IBotCommand2, IBotSteamClient, IGitHubPluginUpdates {
 	public string Name => nameof(ItemStackerPlugin);
 	public string RepositoryName => "dm1tz/ItemStacker";
 	public Version Version => typeof(ItemStackerPlugin).Assembly.GetName().Version ?? throw new InvalidOperationException(nameof(Version));
