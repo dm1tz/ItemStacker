@@ -53,7 +53,12 @@ internal static class StackHandler {
 			throw new InvalidOperationException(nameof(inventoryHandler));
 		}
 
-		BotStatuses[bot.BotName] = new StackStatus(bot.BotName, appID, 0, 0, false);
+		StackStatus newStatus = new(bot.BotName, appID, 0, 0, false);
+		StackStatus status = BotStatuses.GetOrAdd(bot.BotName, newStatus);
+
+		if (!ReferenceEquals(status, newStatus)) {
+			return string.Join(Environment.NewLine, PluginLocale.Strings.FormatBotStackAlreadyScheduled(status.BotName), status.ToTable());
+		}
 
 		await StackSemaphore.WaitAsync().ConfigureAwait(false);
 
@@ -125,7 +130,12 @@ internal static class StackHandler {
 			throw new InvalidOperationException(nameof(inventoryHandler));
 		}
 
-		BotStatuses[bot.BotName] = new StackStatus(bot.BotName, appID, 0, 0, true);
+		StackStatus newStatus = new(bot.BotName, appID, 0, 0, true);
+		StackStatus status = BotStatuses.GetOrAdd(bot.BotName, newStatus);
+
+		if (!ReferenceEquals(status, newStatus)) {
+			return string.Join(Environment.NewLine, PluginLocale.Strings.FormatBotStackAlreadyScheduled(status.BotName), status.ToTable());
+		}
 
 		await StackSemaphore.WaitAsync().ConfigureAwait(false);
 
