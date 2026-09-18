@@ -63,7 +63,6 @@ internal static class StackHandler {
 		await StackSemaphore.WaitAsync().ConfigureAwait(false);
 
 		try {
-
 			filterFunction ??= static _ => true;
 
 			HashSet<Asset> inventory = [];
@@ -108,7 +107,9 @@ internal static class StackHandler {
 
 					BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with { Progress = successCount };
 
-					await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
+					if (successCount < total) {
+						await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
+					}
 				}
 			}
 
@@ -174,7 +175,9 @@ internal static class StackHandler {
 
 					BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with { Progress = successCount };
 
-					await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
+					if (successCount < total) {
+						await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
+					}
 				}
 			}
 
