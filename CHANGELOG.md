@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/dm1tz/ItemStacker/compare/0.8.2...0.9.0) (2026-09-20)
+
+
+### Features
+
+* bump ([fc0722f](https://github.com/dm1tz/ItemStacker/commit/fc0722f623a6fef52d4fd5c7bceb2082c75799b0))
+
 ## [0.8.2](https://github.com/dm1tz/ItemStacker/compare/0.8.1...0.8.2) (2026-08-23)
 
 
