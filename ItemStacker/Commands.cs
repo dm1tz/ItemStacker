@@ -269,7 +269,7 @@ internal static class Commands {
 			return bot.Commands.FormatBotResponse(string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(assetNames)));
 		}
 
-		string result = await StackHandler.StackInventory(bot, appID, contextID, asset => assetNames.Contains(asset.Description!.Name, StringComparer.OrdinalIgnoreCase)).ConfigureAwait(false);
+		string result = await StackHandler.StackInventory(bot, appID, contextID, asset => (asset.Description != null) && assetNames.Contains(asset.Description.Name, StringComparer.OrdinalIgnoreCase)).ConfigureAwait(false);
 
 		return bot.Commands.FormatBotResponse(result);
 	}
@@ -490,7 +490,7 @@ internal static class Commands {
 			return bot.Commands.FormatBotResponse(string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(assetNames)));
 		}
 
-		string result = await StackHandler.UnstackInventory(bot, appID, contextID, asset => assetNames.Contains(asset.Description!.Name, StringComparer.OrdinalIgnoreCase)).ConfigureAwait(false);
+		string result = await StackHandler.UnstackInventory(bot, appID, contextID, asset => (asset.Description != null) && assetNames.Contains(asset.Description.Name, StringComparer.OrdinalIgnoreCase)).ConfigureAwait(false);
 
 		return bot.Commands.FormatBotResponse(result);
 	}

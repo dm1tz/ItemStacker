@@ -53,12 +53,16 @@ internal static class StackHandler {
 			throw new InvalidOperationException(nameof(inventoryHandler));
 		}
 
-		BotStatuses[bot.BotName] = new StackStatus(bot.BotName, appID, 0, 0, false);
+		StackStatus newStatus = new(bot.BotName, appID, 0, 0, false);
+		StackStatus status = BotStatuses.GetOrAdd(bot.BotName, newStatus);
+
+		if (!ReferenceEquals(status, newStatus)) {
+			return string.Join(Environment.NewLine, PluginLocale.Strings.FormatBotStackAlreadyScheduled(status.BotName), status.ToTable());
+		}
 
 		await StackSemaphore.WaitAsync().ConfigureAwait(false);
 
 		try {
-
 			filterFunction ??= static _ => true;
 
 			HashSet<Asset> inventory = [];
@@ -77,10 +81,12 @@ internal static class StackHandler {
 
 			HashSet<IGrouping<ulong, Asset>> assetGroups = [.. inventory.GroupBy(asset => asset.ClassID).Where(assetGroup => assetGroup.Count() > 1)];
 
-			if (assetGroups == null) {
+			if (assetGroups.Count == 0) {
 				return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(assetGroups));
 			}
 
+			int total = assetGroups.Sum(static group => group.Count() - 1);
+			BotStatuses[bot.BotName] = status with { Total = total };
 			uint successCount = 0;
 
 			foreach (IGrouping<ulong, Asset> assetGroup in assetGroups) {
@@ -99,12 +105,11 @@ internal static class StackHandler {
 
 					successCount++;
 
-					BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with {
-						Progress = successCount,
-						Total = assetGroups.Sum(group => group.Count() - 1)
-					};
+					BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with { Progress = successCount };
 
-					await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
+					if (successCount < total) {
+						await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
+					}
 				}
 			}
 
@@ -125,7 +130,12 @@ internal static class StackHandler {
 			throw new InvalidOperationException(nameof(inventoryHandler));
 		}
 
-		BotStatuses[bot.BotName] = new StackStatus(bot.BotName, appID, 0, 0, true);
+		StackStatus newStatus = new(bot.BotName, appID, 0, 0, true);
+		StackStatus status = BotStatuses.GetOrAdd(bot.BotName, newStatus);
+
+		if (!ReferenceEquals(status, newStatus)) {
+			return string.Join(Environment.NewLine, PluginLocale.Strings.FormatBotStackAlreadyScheduled(status.BotName), status.ToTable());
+		}
 
 		await StackSemaphore.WaitAsync().ConfigureAwait(false);
 
@@ -144,6 +154,8 @@ internal static class StackHandler {
 				return string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(inventory));
 			}
 
+			int total = inventory.Sum(static asset => (int) asset.Amount - 1);
+			BotStatuses[bot.BotName] = status with { Total = total };
 			uint successCount = 0;
 
 			foreach (Asset asset in inventory) {
@@ -161,12 +173,11 @@ internal static class StackHandler {
 
 					successCount++;
 
-					BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with {
-						Progress = successCount,
-						Total = inventory.Sum(asset => (int) asset.Amount - 1)
-					};
+					BotStatuses[bot.BotName] = BotStatuses[bot.BotName] with { Progress = successCount };
 
-					await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
+					if (successCount < total) {
+						await Task.Delay(StackLimiterDelay * 1000).ConfigureAwait(false);
+					}
 				}
 			}
 

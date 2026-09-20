@@ -71,4 +71,8 @@
 	<data name="BotNoStackRun" xml:space="preserve">
 		<value>No stack or unstack operation has been run yet.</value>
 	</data>
+	<data name="BotStackAlreadyScheduled" xml:space="preserve">
+		<value>{0} already has a stack or unstack operation scheduled:</value>
+		<comment>{0} will be replaced by bot name</comment>
+	</data>
 </root>
